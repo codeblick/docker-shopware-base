@@ -47,3 +47,5 @@ COPY files/start-apache.sh /etc/services.d/apache/run
 COPY files/start-fpm.sh /etc/services.d/php_fpm/run
 RUN chmod 755 /etc/services.d/php_fpm/run && \
     chmod 755 /etc/services.d/apache/run
+
+WORKDIR /var/www/html
