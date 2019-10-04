@@ -10,6 +10,7 @@ CMD []
 
 ENV DEBIAN_FRONTEND noninteractive
 ARG PHP_VERSION
+ENV PHP_VERSION=$PHP_VERSION
 
 RUN apt update && apt install -y software-properties-common curl inetutils-syslogd && \
     apt-add-repository ppa:ondrej/apache2 -y && \
@@ -48,4 +49,5 @@ COPY files/start-fpm.sh /etc/services.d/php_fpm/run
 RUN chmod 755 /etc/services.d/php_fpm/run && \
     chmod 755 /etc/services.d/apache/run
 
+EXPOSE 8080
 WORKDIR /var/www/html
