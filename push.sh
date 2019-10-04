@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+push() {
+    docker push codeblick/shopware-base:php-${1}
+}
+
 docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-docker push codeblick/shopware-base:php-7.3
+
+push 7.2
+push 7.3

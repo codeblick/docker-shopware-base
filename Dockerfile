@@ -9,7 +9,7 @@ ENTRYPOINT ["/init"]
 CMD []
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV PHP_VERSION 7.3
+ARG PHP_VERSION
 
 RUN apt update && apt install -y software-properties-common curl inetutils-syslogd && \
     apt-add-repository ppa:ondrej/apache2 -y && \
@@ -38,7 +38,7 @@ RUN apt update && apt install -y software-properties-common curl inetutils-syslo
     sed -i 's#.*clear_env.*#clear_env=no#g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
     a2enmod env headers proxy proxy_http proxy_fcgi rewrite
 
-COPY files/php.ini /etc/php/7.3/fpm/conf.d/05-custom.ini
+COPY files/php.ini /etc/php/${PHP_VERSION}/fpm/conf.d/05-custom.ini
 
 COPY files/ports.conf /etc/apache2/ports.conf
 COPY files/vhost.conf /etc/apache2/sites-enabled/000-default.conf
