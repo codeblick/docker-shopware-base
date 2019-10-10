@@ -21,7 +21,7 @@ do
   cd themes/
   npm install
 
-  grunt
+  grunt --shopId=${GRUNT_SHOP_ID}
 done
 
 EOF

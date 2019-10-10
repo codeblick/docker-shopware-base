@@ -5,7 +5,8 @@ build() {
     docker build . \
         -t codeblick/shopware-base:php-${2} \
         --build-arg PHP_VERSION=${1} \
-        --build-arg WITH_GRUNT=${3}
+        --build-arg WITH_GRUNT=${3} \
+        -q
 }
 
 build 7.2 7.2 0

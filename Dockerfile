@@ -50,6 +50,7 @@ RUN chmod 755 /etc/services.d/php_fpm/run && \
     chmod 755 /etc/services.d/apache/run
 
 ARG WITH_GRUNT
+ENV GRUNT_SHOP_ID=1
 COPY files/install-grunt.sh /install-grunt.sh
 RUN if [ "$WITH_GRUNT" = "1" ] ; then sh /install-grunt.sh ; fi && \
     rm /install-grunt.sh
