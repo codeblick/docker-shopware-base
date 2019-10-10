@@ -49,5 +49,10 @@ COPY files/start-fpm.sh /etc/services.d/php_fpm/run
 RUN chmod 755 /etc/services.d/php_fpm/run && \
     chmod 755 /etc/services.d/apache/run
 
+ARG WITH_GRUNT
+COPY files/install-grunt.sh /install-grunt.sh
+RUN if [ "$WITH_GRUNT" = "1" ] ; then sh /install-grunt.sh ; fi && \
+    rm /install-grunt.sh
+
 EXPOSE 8080
 WORKDIR /var/www/html

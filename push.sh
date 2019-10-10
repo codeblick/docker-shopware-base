@@ -9,3 +9,5 @@ docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 
 push 7.2
 push 7.3
+push 7.2-dev
+push 7.3-dev
