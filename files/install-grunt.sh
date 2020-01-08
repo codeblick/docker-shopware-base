@@ -3,6 +3,7 @@ set -e;
 
 apt update
 apt install -y nodejs npm
+curl https://www.npmjs.com/install.sh | sh
 npm install -g grunt-cli
 
 mkdir /etc/services.d/grunt
