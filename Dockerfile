@@ -12,6 +12,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ARG PHP_VERSION
 ENV PHP_VERSION=$PHP_VERSION
 
+ENV PHP_XDEBUG=0
+
 RUN apt update && apt install -y software-properties-common curl inetutils-syslogd && \
     apt-add-repository ppa:ondrej/apache2 -y && \
     LC_ALL=C.UTF-8 apt-add-repository ppa:ondrej/php -y && \
@@ -37,7 +39,26 @@ RUN apt update && apt install -y software-properties-common curl inetutils-syslo
     sed -i 's#.*variables_order.*#variables_order=EGPCS#g' /etc/php/${PHP_VERSION}/fpm/php.ini && \
     sed -i 's#.*date.timezone.*#date.timezone=Europe/Berlin#g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
     sed -i 's#.*clear_env.*#clear_env=no#g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    a2enmod env headers proxy proxy_http proxy_fcgi rewrite
+    a2enmod env headers proxy proxy_http proxy_fcgi rewrite && \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug
+
+# Install Memcached for PHP 7
+RUN curl -L -o /tmp/memcached.tar.gz "https://github.com/php-memcached-dev/php-memcached/archive/php7.tar.gz" \
+    && mkdir -p /usr/src/php/ext/memcached \
+    && tar -C /usr/src/php/ext/memcached -zxvf /tmp/memcached.tar.gz --strip 1 \
+    && docker-php-ext-configure memcached \
+    && docker-php-ext-install memcached \
+    && rm /tmp/memcached.tar.gz
+
+# Install Redis for PHP 7
+ENV REDIS_VERSION 5.2.2
+RUN curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$REDIS_VERSION.tar.gz \
+    && tar xfz /tmp/redis.tar.gz \
+    && rm -r /tmp/redis.tar.gz \
+    && mkdir -p /usr/src/php/ext \
+    && mv phpredis-* /usr/src/php/ext/redis
+RUN docker-php-ext-install redis
 
 COPY files/php.ini /etc/php/${PHP_VERSION}/fpm/conf.d/05-custom.ini
 
