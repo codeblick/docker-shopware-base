@@ -14,7 +14,7 @@ ENV PHP_VERSION=$PHP_VERSION
 
 ENV PHP_XDEBUG=0
 
-RUN apt update && apt install -y software-properties-common curl inetutils-syslogd && \
+RUN apt update && apt install -y software-properties-common curl inetutils-syslogd pecl && \
     apt-add-repository ppa:ondrej/apache2 -y && \
     LC_ALL=C.UTF-8 apt-add-repository ppa:ondrej/php -y && \
     apt update && apt install -y \
