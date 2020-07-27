@@ -13,6 +13,9 @@ ARG PHP_VERSION
 ENV PHP_VERSION=$PHP_VERSION
 
 ENV PHP_XDEBUG=0
+ENV PHP_XDEBUG_HOST=docker.host
+ENV PHP_XDEBUG_IDEKEY=VSCODE
+ENV PHP_XDEBUG_PORT=9001
 
 RUN apt update && apt install -y software-properties-common curl inetutils-syslogd && \
     apt-add-repository ppa:ondrej/apache2 -y && \
@@ -27,7 +30,7 @@ RUN apt update && apt install -y software-properties-common curl inetutils-syslo
         php${PHP_VERSION}-apcu \
         php${PHP_VERSION}-mbstring \
         php${PHP_VERSION}-xml \
-        # php${PHP_VERSION}-xdebug \
+        php${PHP_VERSION}-xdebug \
         # php${PHP_VERSION}-memcached \
         # php${PHP_VERSION}-redis \
     apache2 && \
