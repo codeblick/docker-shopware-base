@@ -31,6 +31,7 @@ RUN apt update && apt install -y software-properties-common curl inetutils-syslo
         php${PHP_VERSION}-mbstring \
         php${PHP_VERSION}-xml \
         php${PHP_VERSION}-imagick \
+        php${PHP_VERSION}-soap \
         # php${PHP_VERSION}-xdebug \
         # php${PHP_VERSION}-memcached \
         # php${PHP_VERSION}-redis \
