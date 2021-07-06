@@ -1,6 +1,8 @@
 #!/usr/bin/with-contenv sh
 set -e;
 
+curl -sL https://deb.nodesource.com/setup_10.x | bash -
+
 apt update
 apt install -y nodejs npm
 curl https://www.npmjs.com/install.sh | sh
