@@ -1,8 +1,10 @@
 #!/usr/bin/with-contenv sh
 set -e;
 
+curl -sL https://deb.nodesource.com/setup_10.x | bash -
+
 apt update
-apt install -y nodejs npm
+apt install -y nodejs
 curl https://www.npmjs.com/install.sh | sh
 npm install -g grunt-cli
 
