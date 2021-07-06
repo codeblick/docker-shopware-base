@@ -5,9 +5,9 @@ push() {
     docker push codeblick/shopware-base:php-${1}
 }
 
-docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-
-push 7.2
-push 7.3
-push 7.2-dev
-push 7.3-dev
+# push 7.2
+# push 7.3
+push 7.4
+# push 7.2-dev
+# push 7.3-dev
+push 7.4-dev
