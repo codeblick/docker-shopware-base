@@ -25,7 +25,7 @@ RUN apt update && apt install -y software-properties-common curl inetutils-syslo
         php${PHP_VERSION}-gd \
         php${PHP_VERSION}-curl \
         php${PHP_VERSION}-zip \
-        php${PHP_VERSION}-json \
+        # php${PHP_VERSION}-json \ Part of core in PHP 8.x
         php${PHP_VERSION}-mysql \
         php${PHP_VERSION}-apcu \
         php${PHP_VERSION}-mbstring \
