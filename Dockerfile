@@ -17,7 +17,7 @@ ENV PHP_XDEBUG_HOST=docker.host
 ENV PHP_XDEBUG_IDEKEY=VSCODE
 ENV PHP_XDEBUG_PORT=9001
 
-RUN apt update && apt install -y software-properties-common curl inetutils-syslogd && \
+RUN apt update && apt install -y git software-properties-common curl inetutils-syslogd && \
     apt-add-repository ppa:ondrej/apache2 -y && \
     LC_ALL=C.UTF-8 apt-add-repository ppa:ondrej/php -y && \
     apt update && apt install -y \
@@ -49,7 +49,6 @@ RUN apt update && apt install -y software-properties-common curl inetutils-syslo
     sed -i 's#.*clear_env.*#clear_env=no#g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
     a2enmod env headers proxy proxy_http proxy_fcgi rewrite
 
-
 COPY files/php.ini /etc/php/${PHP_VERSION}/fpm/conf.d/05-custom.ini
 
 COPY files/ports.conf /etc/apache2/ports.conf
@@ -60,10 +59,36 @@ COPY files/start-fpm.sh /etc/services.d/php_fpm/run
 RUN chmod 755 /etc/services.d/php_fpm/run && \
     chmod 755 /etc/services.d/apache/run
 
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+ENV NVM_DIR /usr/local/.nvm
+ENV NODE_VERSION 10
+
+# Install nvm
+RUN git clone https://github.com/creationix/nvm.git $NVM_DIR && \
+    cd $NVM_DIR && \
+    git checkout `git describe --abbrev=0 --tags`
+
+# Install default version of Node.js
+RUN source $NVM_DIR/nvm.sh && \
+    nvm install $NODE_VERSION && \
+    nvm install lts/boron && \
+    nvm install lts/carbon && \
+    nvm install lts/dubnium && \
+    nvm install lts/erbium && \
+    nvm alias default $NODE_VERSION && \
+    nvm use default
+
+# Add nvm.sh to .bashrc for startup...
+RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc && \
+    source $HOME/.bashrc
+
+ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+
 ARG WITH_GRUNT
 ENV GRUNT_SHOP_ID=1
 COPY files/install-grunt.sh /install-grunt.sh
-RUN if [ "$WITH_GRUNT" = "1" ] ; then sh /install-grunt.sh ; fi && \
+RUN if [ "$WITH_GRUNT" = "1" ] ; then bash /install-grunt.sh ; fi && \
     rm /install-grunt.sh
 
 EXPOSE 8080

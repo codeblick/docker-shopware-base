@@ -1,11 +1,8 @@
 #!/usr/bin/with-contenv sh
 set -e;
 
-curl -sL https://deb.nodesource.com/setup_10.x | bash -
+source $HOME/.bashrc
 
-apt update
-apt install -y nodejs
-curl https://www.npmjs.com/install.sh | sh
 npm install -g grunt-cli
 
 mkdir /etc/services.d/grunt
