@@ -8,10 +8,11 @@ push() {
 # push 7.2
 # push 7.3
 # push 7.4
-# push 8.1
+push 8.1
 
 # push 7.2-dev
 # push 7.3-dev
 # push 7.4-dev
-push 8.1-dev
+# push 8.0-dev
+#push 8.1-dev
 

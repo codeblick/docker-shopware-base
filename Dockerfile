@@ -1,89 +1,84 @@
-FROM ubuntu:18.04
-
-ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /bin/wait-for-it.sh
-RUN chmod +x /bin/wait-for-it.sh
-
-ADD https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
-ENTRYPOINT ["/init"]
-CMD []
-
-ENV DEBIAN_FRONTEND noninteractive
 ARG PHP_VERSION
-ENV PHP_VERSION=$PHP_VERSION
+
+FROM php:${PHP_VERSION}-apache
+
+ENV PHP_MAX_EXECUTION_TIME=30
+ENV PHP_MEMORY_LIMIT=1024M
+
+ENV UPLOAD_MAX_FILE_SIZE=50M
+ENV POST_MAX_FILE_SIZE=50M
+
+ENV OPCACHE_ENABLE=1
+ENV OPCACHE_MAX_ACCELERATED_FILES=20000
+ENV OPCACHE_MEMORY_CONSUMPTION=256M
+ENV OPCACHE_REVALIDATE_FREQ=0
+
+ENV APCU_ENABLED=1
+ENV APCU_SHM_SIZE=128M
+ENV APCU_ENABLE_CLI=1
+
+ENV APACHE_DOCUMENT_ROOT /var/www/html
 
 ENV PHP_XDEBUG=0
 ENV PHP_XDEBUG_HOST=docker.host
 ENV PHP_XDEBUG_IDEKEY=VSCODE
-ENV PHP_XDEBUG_PORT=9001
+ENV PHP_XDEBUG_PORT=9000
 
-RUN apt update && apt install -y git software-properties-common curl inetutils-syslogd && \
-    apt-add-repository ppa:ondrej/apache2 -y && \
-    LC_ALL=C.UTF-8 apt-add-repository ppa:ondrej/php -y && \
-    apt update && apt install -y \
-        php${PHP_VERSION}-fpm \
-        php${PHP_VERSION}-gd \
-        php${PHP_VERSION}-curl \
-        php${PHP_VERSION}-zip \
-        # php${PHP_VERSION}-json \ Part of core in PHP 8.x
-        php${PHP_VERSION}-mysql \
-        php${PHP_VERSION}-apcu \
-        php${PHP_VERSION}-mbstring \
-        php${PHP_VERSION}-xml \
-        php${PHP_VERSION}-imagick \
-        php${PHP_VERSION}-soap \
-        # php${PHP_VERSION}-xdebug \
-        # php${PHP_VERSION}-memcached \
-        # php${PHP_VERSION}-redis \
-    apache2 && \
-    apt autoremove -y && apt clean && rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /run/php && chmod -R 755 /run/php && \
-    sed -i 's|.*listen =.*|listen=9000|g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    sed -i 's|.*error_log =.*|error_log=/proc/self/fd/2|g' /etc/php/${PHP_VERSION}/fpm/php-fpm.conf && \
-    sed -i 's|.*access.log =.*|access.log=/proc/self/fd/2|g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    sed -i 's|.*user =.*|user=root|g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    sed -i 's|.*group =.*|group=root|g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    sed -i 's#.*variables_order.*#variables_order=EGPCS#g' /etc/php/${PHP_VERSION}/fpm/php.ini && \
-    sed -i 's#.*date.timezone.*#date.timezone=Europe/Berlin#g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    sed -i 's#.*clear_env.*#clear_env=no#g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
-    a2enmod env headers proxy proxy_http proxy_fcgi rewrite
+RUN apt-get update
+RUN apt-get install -y \
+        # ext-gd
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        #ext-curl \
+        curl \
+        libcurl4-gnutls-dev \
+        # ext-xml
+        libxml2-dev \
+        # ext-mbstring
+        libonig-dev \
+        # ext-zip
+        zip \
+        libzip-dev \
+        # intl
+        zlib1g-dev \
+        libicu-dev \
+        g++ \
+        wget
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-configure intl
+RUN docker-php-ext-install \
+        gd \
+        iconv \
+        pdo \
+        pdo_mysql \
+        mbstring \
+        xml \
+        zip \
+        intl \
+        opcache \
+        soap
+RUN pecl install redis && docker-php-ext-enable redis
 
-COPY files/php.ini /etc/php/${PHP_VERSION}/fpm/conf.d/05-custom.ini
+RUN if [ "$PHP_VERSION" = "7.4" ] ; then docker-php-ext-install json; fi
 
-COPY files/ports.conf /etc/apache2/ports.conf
-COPY files/vhost.conf /etc/apache2/sites-enabled/000-default.conf
+RUN pecl install apcu && \
+    docker-php-ext-enable apcu
 
-COPY files/start-apache.sh /etc/services.d/apache/run
-COPY files/start-fpm.sh /etc/services.d/php_fpm/run
-RUN chmod 755 /etc/services.d/php_fpm/run && \
-    chmod 755 /etc/services.d/apache/run
+ARG WITH_XDEBUG
+RUN if [ "$WITH_XDEBUG" = "1" ] ; then pecl install xdebug && docker-php-ext-enable xdebug; fi
 
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+ADD files/php-config.ini /usr/local/etc/php/conf.d/php-config.ini
 
-ENV NVM_DIR /usr/local/.nvm
-ENV NODE_VERSION 10
+RUN a2enmod rewrite
+RUN a2enmod headers
+RUN a2enmod expires
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Install nvm
-RUN git clone https://github.com/creationix/nvm.git $NVM_DIR && \
-    cd $NVM_DIR && \
-    git checkout `git describe --abbrev=0 --tags`
-
-# Install default version of Node.js
-RUN source $NVM_DIR/nvm.sh && \
-    nvm install $NODE_VERSION && \
-    nvm install lts/boron && \
-    nvm install lts/carbon && \
-    nvm install lts/dubnium && \
-    nvm install lts/erbium && \
-    nvm alias default $NODE_VERSION && \
-    nvm use default
-
-# Add nvm.sh to .bashrc for startup...
-RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc && \
-    source $HOME/.bashrc
-
-ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
+    apt-get install -y \
+        nodejs
 
 ARG WITH_GRUNT
 ENV GRUNT_SHOP_ID=1
@@ -91,5 +86,10 @@ COPY files/install-grunt.sh /install-grunt.sh
 RUN if [ "$WITH_GRUNT" = "1" ] ; then bash /install-grunt.sh ; fi && \
     rm /install-grunt.sh
 
-EXPOSE 8080
-WORKDIR /var/www/html
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN chown www-data:www-data /var/www && \
+    usermod --non-unique --uid 1000 www-data && \
+    groupmod --non-unique --gid 1000 www-data
+
+USER www-data

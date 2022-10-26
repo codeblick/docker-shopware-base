@@ -5,7 +5,7 @@ source $HOME/.bashrc
 
 npm install -g grunt-cli
 
-mkdir /etc/services.d/grunt
+mkdir -p /etc/services.d/grunt
 
 cat << EOF > /etc/services.d/grunt/run
 #!/usr/bin/with-contenv sh
